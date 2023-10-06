@@ -1,0 +1,50 @@
+local speed = 150
+
+function init(self)
+	msg.post('.', 'acquire_input_focus')
+	self.dir = vmath.vector3()
+	msg.post('.', 'disable')
+end
+
+function final(self)
+	-- Add finalization code here
+	-- Learn more: https://defold.com/manuals/script/
+	-- Remove this function if not needed
+end
+
+function update(self, dt)
+	if vmath.length_sqr(self.dir) > 1 then
+		self.dir = vmath.normalize(self.dir)
+	end
+	local p = go.get_position()
+	go.set_position(p + self.dir * speed * dt)
+	self.dir = vmath.vector3()
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash('run_test') then
+		msg.post('.', 'enable')
+	elseif message_id == hash('close_test') then
+		msg.post('.', 'disable')
+	elseif message_id == hash('resume_test') then
+		msg.post('.', 'enable')
+	end
+end
+
+function on_input(self, action_id, action)
+	if action_id == hash('up') then
+		self.dir.y = 1
+	elseif action_id == hash('down') then
+		self.dir.y = -1
+	elseif action_id == hash('left') then
+		self.dir.x = -1
+	elseif action_id == hash('right') then
+		self.dir.x = 1
+	end	
+end
+
+function on_reload(self)
+	-- Add reload-handling code here
+	-- Learn more: https://defold.com/manuals/hot-reload/
+	-- Remove this function if not needed
+end

@@ -1,0 +1,21 @@
+[bootstrap]
+main_collection = /main/main.collectionc
+
+[script]
+shared_state = 1
+
+[android]
+input_method = HiddenInputField
+
+[project]
+title = Rings
+dependencies#0 = https://github.com/britzl/gooey-kenney/archive/main.zip
+dependencies#1 = https://github.com/britzl/gooey/archive/master.zip
+
+[display]
+vsync = 1
+
+[input]
+repeat_interval = 0.05
+repeat_delay = 0.05
+

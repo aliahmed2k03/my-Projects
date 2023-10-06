@@ -1,0 +1,60 @@
+local mainmenu = false
+
+function init(self)
+	msg.post('.', 'acquire_input_focus')--<1>
+	msg.post('#', 'enable')
+	mainmenu = true
+end
+-- <1> Checks for input
+function on_input(self, action_id, action)
+	if action_id == hash("left_click") and action.pressed then
+		local quitb = gui.get_node("Quit") -- <2>
+		if gui.pick_node(quitb, action.x, action.y) then 
+			msg.post("@system:", "exit", {code = 0})--<3>
+			print("SYSTEM HAS SHUT DOWN")
+		end
+	end
+
+--[[
+<1> Node has been switched to the 'Quit' box
+<2> Sends a message to the system to shut down
+--]]
+	
+	if action_id == hash("left_click") and action.pressed then
+		local playb = gui.get_node("Play")
+		if gui.pick_node(playb, action.x, action.y) then
+			msg.post('#', 'disable')--<1>
+			msg.post('/gamescreen#game', 'begin_game')--<2>
+			msg.post('/gamescreen#rings', 'begin_game')
+			print("Game has begun")
+			mainmenu = false
+		end
+	end
+
+--[[
+<1> when play button is pressed the GUI will be disabled
+<2> sends a message to the game script to begin the game
+--]]
+
+	if action_id == hash("left_click") and action.pressed then
+		local controlb = gui.get_node("Controls")
+		if gui.pick_node(controlb, action.x, action.y) then
+			msg.post('#', 'disable')
+			msg.post('/controlscreen#controls', 'show_controls_screen')--<1>
+			print("Controls screen has popped up")
+			mainmenu = false
+		end
+	end
+--<1> sends a message to the controls GUI to show the controls screen
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash('back_to_menu') then
+		msg.post('#', 'enable')
+	
+	end	
+end
+
+
+
+

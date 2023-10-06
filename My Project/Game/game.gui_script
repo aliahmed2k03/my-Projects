@@ -1,0 +1,61 @@
+function init(self)
+	msg.post('.','acquire_input_focus')
+	msg.post('#','disable')
+	secondtimer = gui.get_node('timer')
+	levelbox = gui.get_node('leveltext') 
+	scorebox = gui.get_node('score')
+end
+
+function final(self)
+	-- Add finalization code here
+	-- Learn more: https://defold.com/manuals/script/
+	-- Remove this function if not needed
+end
+
+function update(self, dt)
+	-- Add update code here
+	-- Learn more: https://defold.com/manuals/script/
+	-- Remove this function if not needed
+end
+
+function on_message(self, message_id, message, sender)
+	if message_id == hash("begin_game") then
+		msg.post('#', 'enable') -- <1>
+	end
+	if message_id == hash('resume_game') then
+		msg.post('#', 'enable')--<2>
+	elseif message_id == hash('add_points') then
+		gui.set_text(scorebox, 'Score: '..message.score)
+	elseif message_id == hash('3_sec') then
+		gui.set_text(secondtimer, message.timer)
+	elseif message_id == hash('increase_level') then
+		gui.set_text(levelbox, 'Level: '..message.level)
+	elseif message_id == hash('reset_values') then
+		gui.set_text(levelbox, 'Level: 01')
+		gui.set_text(scorebox, 'Score: 0000')
+		
+	end
+end
+
+--[[
+<1> catches a message from the menu screen and enables the game screen
+<2> catches a message from the pause menu and re enables the game screen
+--]]
+
+function on_input(self, action_id, action)
+	if action_id == hash("left_click") and action.pressed then
+		local pausescreen = gui.get_node("pausebutton")
+		if gui.pick_node(pausescreen, action.x, action.y) then
+			msg.post('#', 'disable')
+			msg.post('/pausescreen#pause', 'open_pausescreen')
+			msg.post('/gamescreen#rings', 'pause_game')
+			print("arrived back at main menu")
+		end
+	end
+end
+
+function on_reload(self)
+	-- Add reload-handling code here
+	-- Learn more: https://defold.com/manuals/hot-reload/
+	-- Remove this function if not needed
+end

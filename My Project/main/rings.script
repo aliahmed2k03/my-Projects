@@ -1,0 +1,330 @@
+function init(self)
+	tilemap.set_visible('/gridtable#grid', 'layer', false)
+	msg.post('.', 'acquire_input_focus')
+	delay = math.random(10,20)	
+	charges(self)
+end
+
+-- Create a block at the top of the screen.
+-- If not possible, trigger the game over screen.
+local function create_block(self)
+	-- 1: empty
+	-- 2: I (cyan)
+	-- 3: O (yellow)
+	-- 4: T (purple)
+	-- 5: S (green)
+	-- 6: Z (red)
+	-- 7: J (blue)
+	-- 8: L (orange)
+	self.block = {}
+	self.block.number = math.random(2, 8)
+	if self.block.number == 2 then
+		-- OOOO
+		self.block.coords = {
+			{ x = 4, y = 20 },
+			{ x = 5, y = 20 },
+			{ x = 6, y = 20 },
+			{ x = 7, y = 20 }
+		}
+	elseif self.block.number == 3 then
+		-- OO
+		-- OO
+		self.block.coords = {
+			{ x = 5, y = 20 },
+			{ x = 6, y = 20 },
+			{ x = 5, y = 19 },
+			{ x = 6, y = 19 }
+		}
+	elseif self.block.number == 4 then
+		-- OOO
+		--  O
+		self.block.coords = {
+			{ x = 5, y = 20 },
+			{ x = 6, y = 20 },
+			{ x = 7, y = 20 },
+			{ x = 6, y = 19 }
+		}
+	elseif self.block.number == 5 then
+		--  OO
+		-- OO
+		self.block.coords = {
+			{ x = 6, y = 20 },
+			{ x = 7, y = 20 },
+			{ x = 5, y = 19 },
+			{ x = 6, y = 19 }
+		}
+	elseif self.block.number == 6 then
+		-- OO
+		--  OO
+		self.block.coords = {
+			{ x = 5, y = 20 },
+			{ x = 6, y = 20 },
+			{ x = 6, y = 19 },
+			{ x = 7, y = 19 }
+		}
+	elseif self.block.number == 7 then
+		-- O
+		-- OOO
+		self.block.coords = {
+			{ x = 5, y = 20 },
+			{ x = 5, y = 19 },
+			{ x = 6, y = 19 },
+			{ x = 7, y = 19 }
+		}
+	elseif self.block.number == 8 then
+		--   O
+		-- OOO
+		self.block.coords = {
+			{ x = 7, y = 20 },
+			{ x = 5, y = 19 },
+			{ x = 6, y = 19 },
+			{ x = 7, y = 19 }
+		}
+	end
+
+	for i,v in ipairs(self.block.coords) do --i loops over a table 'self.block.coords'
+		if self.grid[v.x][v.y] ~= 1 then --checks if all the tiles in the grid are not ones
+			self.alive = false--messages game over if this is the case
+			msg.post('/gameoverscreen#gameover', 'game_end')
+			msg.post('.', 'disable')
+			tilemap.set_visible('/gridtable#grid', 'layer', false)		
+		end
+	end
+
+	for i,v in ipairs(self.block.coords) do
+		tilemap.set_tile("/gridtable#grid", "layer", v.x, v.y, self.block.number)--paints the top of the map with the block
+	end
+end
+
+-- Initialize the game (at startup or after game over).
+local function reinitialize(self)
+	msg.post(".", "acquire_input_focus")
+	
+	
+	self.grid = {
+		{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+		{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+		{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+		{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+		{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+		{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+		{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+		{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+		{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+		{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
+	} -- define the tilemap into the actual game 
+	for x = 1,10 do
+		for y = 1,20 do
+			tilemap.set_tile("/gridtable#grid", "layer", x, y, 1)
+		end
+	end-- paints all the tiles with tile 1 in a 20x10 area (grid)
+
+	math.randomseed(os.time())
+	math.random(); math.random(); math.random() -- makes the blocks even more random
+	
+	self.speed = 3  -- blocks per second
+	self.score = 0
+
+	self.t = 0  -- time since last update
+	self.alive = true
+	self.level = 1
+	ring = false
+	msg.post('/gamescreen#game', 'reset_values')
+	create_block(self)
+end
+
+
+-- Check if a line was completed. If so, return true and update the grid/tilemap.
+-- It's only done one line at a time.
+local function check_lines(self)
+	for y = 1,20 do
+		linecomplete = true
+		for x = 1,10 do
+			if self.grid[x][y] == 1 then
+				linecomplete = false
+			end
+		end
+		if linecomplete then
+			for yy = y + 1, 20 do
+				for x = 1,10 do
+					self.grid[x][yy - 1] = self.grid[x][yy]
+					tilemap.set_tile("/gridtable#grid", "layer", x, yy - 1, self.grid[x][yy])
+				end
+			end
+			for x = 1,10 do
+				self.grid[x][20] = 1
+				tilemap.set_tile("/gridtable#grid", "layer", x, 20, 1)
+			end
+			return true
+		end
+	end
+	return false
+end
+
+
+-- simply spawns a block after a block has been placed
+local function next_block(self)
+	for i,v in ipairs(self.block.coords) do
+		self.grid[v.x][v.y] = self.block.number -- random number between 2,8 to choose block
+	end
+	create_block(self)
+end
+
+function charges(self)
+	chargetimer = timer.delay(1, true, function()-- timer that runs this code every second
+		msg.post('/gamescreen#game', '3_sec', {timer = delay} )--message sent to timer node 
+		if delay == 0 then
+			delay = math.random(10, 20)-- when delay is zero it gets reset to 10,20
+			while check_lines(self) do --clears all lines simultaneously
+				self.score = self.score + 100--100 points added for every line
+				msg.post('/gamescreen#game', 'add_points', { score = self.score})--msg sent to score node
+				if self.score % 500 == 0 then-- if score is a multiple of 500 then speed increases
+					self.speed = self.speed + 3
+					self.level = self.level + 1
+					msg.post('/gamescreen#game', 'increase_level',{level = self.level})
+				end
+			end
+		end
+		delay = delay - 1-- delay decreases by 1 every second 
+	end)
+end
+
+function rings(self)
+	if ring == false then
+		randomtilex = math.random(1,10)
+		randomtiley = math.random(1,17)
+		tilemap.set_tile('/gridtable#grid', 'layer', randomtilex,randomtiley , 9)
+		for i,v in ipairs(self.block.coords) do
+			if self.grid[v.x][v.y] ~= 9 then
+				ring = false
+				print('ring has spawn') 
+			elseif self.grid[v.x][v.y] == 1 then
+				ring = true
+				print('ring is now true')
+			end
+		end
+	end
+end
+	
+function on_message(self, message_id, message, sender)
+	if message_id == hash('begin_game') then
+		tilemap.set_visible('/gridtable#grid','layer', true)
+		reinitialize(self)
+	elseif message_id == hash('pause_game') then
+		tilemap.set_visible('/gridtable#grid','layer', false)
+
+	elseif message_id == hash('resume_tilemap') then
+		tilemap.set_visible('/gridtable#grid','layer', true)
+	end	
+end
+
+-- paint the coords given by 'block' to empty
+-- and set block coords to nextcoords
+local function repaint(block, nextcoords)
+	for i,v in ipairs(block.coords) do
+		tilemap.set_tile("/gridtable#grid", "layer", v.x, v.y, 1)--empty tiles 
+	end
+	for i,v in ipairs(nextcoords) do
+		tilemap.set_tile("/gridtable#grid", "layer", v.x, v.y, block.number)--new block coords
+	end
+	block.coords = nextcoords
+end
+
+-- Move the block down.
+-- Return false if we reached the floor or another block, and true if we didn't.
+local function move_down(self)
+	local nextcoords = {}
+	for i,v in ipairs(self.block.coords) do
+		if v.y == 1 then
+			-- Reached floor.
+			next_block(self)
+			return false
+		end
+		local number = self.grid[v.x][v.y - 1]
+		if number ~= 1 then
+			-- Reached an existing block.
+			next_block(self)
+			return false
+		end
+		table.insert(nextcoords, { x = v.x, y = v.y - 1 })
+	end
+	repaint(self.block, nextcoords)
+	return true
+end
+
+function update(self, dt)
+	if not self.alive then
+		return
+	end
+	self.t = self.t + dt
+	if self.t > 1 / self.speed then
+		move_down(self)
+		self.t = 0
+	end
+end
+
+-- Rotate the block if possible, and return true on success.
+local function rotate(self)
+	if self.block.number == 3 then  -- O block
+		return true
+	end
+	local nextcoords = {}
+	local pivot = nil -- the tile that pivots will be stored in this variable
+	if self.block.number == 2 or self.block.number == 4 or self.block.number == 6 then --T block, I block and Z block all have a pivot 
+		pivot = self.block.coords[2]-- on the second tile
+	elseif self.block.number == 5 then
+		pivot = self.block.coords[1] -- the S block has a pivot point on the first tile 
+	elseif self.block.number == 7 or self.block.number == 8 then
+		pivot = self.block.coords[3]-- the L block and alternate L block has a pivot point on the third tile.
+	end
+
+	for i,v in ipairs(self.block.coords) do
+		local point = { x = pivot.x + pivot.y - v.y, y = pivot.y + v.x - pivot.x }
+		if point.x < 1 or point.x > 10 or point.y < 1 or point.y > 20 then
+			return false -- Block can't rotate if it is near the either side of the tilemap or on the floor
+		end
+		if self.grid[point.x][point.y] ~= 1 then
+			return false-- block can't rotate if it is in contact or near another block
+		end
+		table.insert(nextcoords, point)
+	end
+	repaint(self.block, nextcoords)
+	return true
+end
+
+function on_input(self, action_id, action)
+	if action_id == hash("rotate") and action.pressed then
+		rotate(self)
+	elseif action_id == hash("down") and (action.pressed or action.repeated) then
+		move_down(self)
+	elseif action_id == hash("left") and (action.pressed or action.repeated) then
+		local nextcoords = {}
+		for i,v in ipairs(self.block.coords) do
+			if v.x == 1 then
+				return
+			end
+			if self.grid[v.x - 1][v.y] ~= 1 then
+				return
+			end
+			table.insert(nextcoords, { x = v.x - 1, y = v.y } )
+		end
+		repaint(self.block, nextcoords)
+	elseif action_id == hash("right") and (action.pressed or action.repeated) then
+		local nextcoords = {}
+		for i,v in ipairs(self.block.coords) do
+			if v.x == 10 then
+				return
+			end
+			if self.grid[v.x + 1][v.y] ~= 1 then
+				return
+			end
+			table.insert(nextcoords, { x = v.x + 1, y = v.y } )
+		end
+		repaint(self.block, nextcoords)
+	elseif action_id == hash("space") and action.pressed then
+		while move_down(self) do
+		end
+	end
+end
+
+
