@@ -25,14 +25,14 @@ public class Main {
         }while (x<5);
     }// test function
 
-    public static void daystoseconds() {
-        Scanner time = new Scanner(System.in);
-        int days = time.nextInt();
-        days *= 24;
-        days *= 60;
-        days *= 60;
-        System.out.println(days);
-    } // complete
+    public static void daystoseconds() 
+    {
+        try (Scanner time = new Scanner(System.in)) 
+        {
+            int days = time.nextInt() * 24 * 60 * 60;
+            System.out.println(days);
+        }
+    }
 
 
     public static void loancalculator() {
